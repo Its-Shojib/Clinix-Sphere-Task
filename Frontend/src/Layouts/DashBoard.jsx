@@ -1,16 +1,18 @@
-import { NavLink,Link, Outlet } from 'react-router-dom';
+import { NavLink, Link, Outlet } from 'react-router-dom';
 import { FaInfoCircle, FaSignOutAlt } from 'react-icons/fa';
 import { CiCirclePlus } from "react-icons/ci";
+import useAuth from '../Hooks/useAuth';
 
 
 const DashBoard = () => {
+    let { Logout } = useAuth();
     return (
         <div>
             <div className="max-w-full mx-auto flex">
                 <div className="w-64 h-screen bg-[#172935] text-white sticky top-0">
                     <div className='text-center my-10'>
-                        <h1 className='text-3xl font-bold'>Milon Mela</h1>
-                        <p className='text-xl'>Matrimony</p>
+                        <h1 className='text-3xl font-bold'>Health Care</h1>
+                        <p className='text-xl'>Tracking</p>
                     </div>
                     <>
                         <ul className='menu flex flex-col mt-10 px-6 space-y-3'>

@@ -9,7 +9,7 @@ export const AuthContext = createContext(null);
 
 const AuthProvider = ({ children }) => {
     let [user, setUser] = useState(null);
-    let [loading, setLoading] = useState(true);
+    let [loading, setLoading] = useState(false);
     let googleProvider = new GoogleAuthProvider();
     let axiosRoot = useAxios();
 
@@ -22,7 +22,7 @@ const AuthProvider = ({ children }) => {
         return signInWithEmailAndPassword(auth, email, password);
     }
     let Logout = () => {
-        setLoading(true);
+        setLoading(false);
         return signOut(auth);
     }
     let googleSignIn = () => {
