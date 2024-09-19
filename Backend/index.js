@@ -33,30 +33,153 @@ async function run() {
         await client.connect();
 
         const userCollections = client.db("Health-Tracking-DB").collection('Users');
+        const recordCollections = client.db("Health-Tracking-DB").collection('Records');
 
         // middlewares verify token
-        const verifyToken = (req, res, next) => {
-            console.log('inside verify token', req.headers.authorization);
-            if (!req.headers.authorization) {
-                return res.status(401).send({ message: 'unauthorized access' });
+        /*Verify Middleware of JWT */
+        const verifyToken = async (req, res, next) => {
+            let token = req?.cookies?.token;
+            console.log('Value of token in middleware: ', token);
+            if (!token) {
+                return res.status(401).send({ message: 'Not Authorized' })
             }
-            const token = req.headers.authorization.split(' ')[1];
-            jwt.verify(token, process.env.ACCESS_TOKEN_PASS, (err, decoded) => {
+            jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
                 if (err) {
-                    return res.status(401).send({ message: 'unauthorized access' })
+                    console.log(err);
+                    return res.status(401).send({ message: 'UnAuthorized' })
                 }
-                req.decoded = decoded;
+                console.log('value in the token', decoded);
+                req.user = decoded;
                 next();
             })
+
         }
 
 
         // =================================JWT Related API👇===============================
+        // -------------------------------------AUTH---------------------------------------------
         app.post('/jwt', async (req, res) => {
             let user = req.body;
-            let token = jwt.sign(user, process.env.ACCESS_TOKEN_PASS, { expiresIn: '1h' });
-            res.send({ token })
+            let token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none'
+                })
+                .send({ token });
         })
+
+        /*Logout APi */
+        app.post('/logout', async (req, res) => {
+            let user = req.body;
+            res.clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true }).send({ success: true })
+        });
+
+
+        // ============================ User Registration API��===========================
+        app.post('/register', async (req, res) => {
+            try {
+                const user = req.body;
+                const result = await userCollections.insertOne(user);
+                res.json({
+                    message: 'User registered successfully',
+                    insertedId: result.insertedId._id
+                })
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({ message: 'Failed to register user' })
+            }
+        });
+
+        app.post('/health-records', async (req, res) => {
+            try {
+                const currentDate = new Date();
+                const newRecord = {
+                    ...req.body,
+                    createdAt: currentDate.toLocaleString('en-US', {
+                        timeZone: 'Asia/Dhaka', 
+                        hour12: false
+                    }),
+                    updatedAt: currentDate.toLocaleString('en-US', {
+                        timeZone: 'Asia/Dhaka',
+                        hour12: false
+                    })
+                };
+                const result = await recordCollections.insertOne(newRecord);
+                console.log(result);
+                if(result.acknowledged === true){
+                    res.json({
+                        message: 'Health record added successfully',
+                        result: true
+                    })
+                }else{
+                    res.json({
+                        message: 'Failed to add health record',
+                        result: false
+                    })
+                }
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({ message: 'Failed to add health record' })
+            }
+        });
+
+        app.get('/health-records', async (req, res) => {
+            try {
+                const records = await recordCollections.find().toArray();
+                res.json(records)
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({ message: 'Failed to fetch records' })
+            }
+        });
+
+        app.get('/health-records/:id', verifyToken, async (req, res) => {
+            try {
+                const record = await recordCollections.findOne({ _id: ObjectId(req.params.id) });
+                if (!record) {
+                    return res.status(404).json({ message: 'Record not found' })
+                }
+                res.json(record)
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({ message: 'Failed to fetch record' })
+            }
+        });
+
+        app.put('/health-records/:id', verifyToken, async (req, res) => {
+            try {
+                const updatedRecord = req.body;
+                const result = await recordCollections.updateOne(
+                    { _id: ObjectId(req.params.id) },
+                    { $set: updatedRecord }
+                );
+                if (result.modifiedCount === 0) {
+                    return res.status(404).json({ message: 'Record not found' })
+                }
+                res.json({ message: 'Record updated successfully' })
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({ message: 'Failed to update record' })
+            }
+        });
+
+        app.delete('/health-records/:id', verifyToken, async (req, res) => {
+            try {
+                const result = await recordCollections.deleteOne({ _id: ObjectId(req.params.id) });
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({ message: 'Record not found' })
+                }
+                res.json({ message: 'Record deleted successfully' })
+            } catch (err) {
+                console.log(err);
+                res.status(500).json({ message: 'Failed to delete record' })
+            }
+        })
+
+
+
 
 
         console.log("Pinged your deployment. You successfully connected to MongoDB!");

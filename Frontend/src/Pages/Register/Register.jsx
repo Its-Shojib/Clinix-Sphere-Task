@@ -28,10 +28,9 @@ const Register = () => {
                 let user = {
                     name: data?.name,
                     email: data?.email,
-                    image: data?.img,
                     password: data?.password
                 }
-                axiosRoot.post('/users', user)
+                axiosRoot.post('/register', user)
                     .then(res => {
                         if (res.data.insertedId) {
                             Swal.fire({
