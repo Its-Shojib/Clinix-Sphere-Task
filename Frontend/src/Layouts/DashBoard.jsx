@@ -1,42 +1,64 @@
-
 import Navbar from '../Components/Navbar';
-import { useForm } from "react-hook-form";
-import useAuth from '../Hooks/useAuth';
+import HealthRecordForm from '../Components/HealthRecordForm';
+import { useQuery } from '@tanstack/react-query';
 import useAxios from '../Hooks/useAxios';
-import toast from 'react-hot-toast';
+import { MdDelete } from "react-icons/md";
+import Swal from 'sweetalert2';
+import { FaSquarePlus } from "react-icons/fa6";
+import UpdateRecord from '../Components/UpdateRecord';
+import { useState } from 'react';
 
 const DashBoard = () => {
-    const { register, handleSubmit } = useForm();
-    let { user } = useAuth();
     let axiosRoot = useAxios();
+    let [updatedData, setUpdatedData] = useState({});
 
-
-    const onSubmit = async (data) => {
-
-        const healthDetails = {
-            date: data.date,
-            temp: parseFloat(data.temp) || 36.7,
-            bp: data.bp || "120/80",
-            heartRate: parseFloat(data.heartRate) || 75,
-            email: user?.email,
+    const { data: allRecord = [], isPending, refetch } = useQuery({
+        queryKey: ['allRecord'],
+        queryFn: async () => {
+            const res = await axiosRoot.get('/health-records');
+            return res.data;
         }
-        console.log(healthDetails);
+    });
 
-        let res = await axiosRoot.post("/health-records", healthDetails);
-        console.log(res.data.result);
-        if(res?.data?.result){
-            toast.success(`${res?.data?.message}`);
-        }else{
-            toast.error(`${res?.data?.message}`);
-        }
-    };
+
+    const handleUpdate = (item) => {
+        setUpdatedData(item);
+        document.getElementById('my_modal2').showModal();
+    }
+
+    const HandleDeleteRecord = (recordId) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                let res = await axiosRoot.delete(`/health-records/${recordId}`);
+                if (res?.data?.result) {
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Your file has been deleted.",
+                        icon: "success"
+                    });
+                    refetch();
+                }
+
+
+            }
+        });
+
+    }
 
     return (
-        <div className='max-w-screen-2xl mx-auto '>
+        <div className='max-w-screen-2xl mx-auto px-2'>
             <Navbar />
             {/* dashboard content goes here */}
 
-            <div className='flex justify-between items-center my-7 bg-stone-400 p-6 rounded-md'>
+            <div className='flex flex-col md:flex-row gap-5 justify-between items-center my-7 bg-stone-400 p-6 rounded-md'>
                 <div className='md:min-w-[800px]'>
                     <form action="">
                         <input
@@ -47,79 +69,92 @@ const DashBoard = () => {
                     </form>
                 </div>
                 <div>
-                    <button className="btn" onClick={() => document.getElementById('my_modal').showModal()}>New Health Record</button>
+                    <button className="btn" onClick={() => document.getElementById('my_modal').showModal()}><FaSquarePlus className='text-xl' />New Health Record</button>
                 </div>
                 {/* You can open the modal using document.getElementById('ID').showModal() method */}
 
-                <dialog id="my_modal" className="modal">
-                    <div className="modal-box">
-                        <form method="dialog">
-                            {/* if there is a button in form, it will close the modal */}
-                            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                        </form>
 
-                        <form onSubmit={handleSubmit(onSubmit)}>
-                            <div className="flex gap-10 my-5">
-                                <div className="flex-1">
-                                    <label className="label">
-                                        <span className="label-text">Date*</span>
-                                    </label>
-                                    <input {...register('date', { required: true })} type="date" className=" w-full p-2 border-2 outline-none" />
-                                </div>
-                            </div>
-
-
-
-                            <div className="flex gap-10 my-5">
-                                <div className="flex-1">
-                                    <label className="label">
-                                        <span className="label-text">Temperature* (C)</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        label="Temperature"
-                                        placeholder="36.7"
-                                        {...register('temp', { required: true })}
-                                        required
-                                        className="w-full p-2 border-2 outline-none" />
-                                </div>
-                            </div>
-                            <div className="flex gap-10 my-5">
-                                <div className="flex-1">
-                                    <label className="label">
-                                        <span className="label-text">Blood Pressure*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        label="bp"
-                                        placeholder='120/80'
-                                        {...register('bp', { required: true })}
-                                        required
-                                        className="w-full p-2 border-2 outline-none" />
-                                </div>
-                            </div>
-                            <div className="flex gap-10 my-5">
-                                <div className="flex-1">
-                                    <label className="label">
-                                        <span className="label-text">Heart Rate*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        label="heart Rate"
-                                        placeholder='75'
-                                        {...register('heartRate', { required: true })}
-                                        required
-                                        className="w-full p-2 border-2 outline-none" />
-                                </div>
-                            </div>
-
-                            <button className="bg-green-900 text-white rounded-lg w-full p-2" type="submit">
-                                Add Now!
-                            </button>
-                        </form>
-                    </div>
-                </dialog>
             </div>
+            {/* Filter those Data by date or filter by health metrics (e.g., heart rate above a certain threshold)*/}
+
+            <div>
+                {
+                    allRecord.length > 0 ? <div>
+                        {
+                            isPending ? <>
+                                <div className="text-center h-screen">
+                                    <span className="loading loading-spinner loading-lg"></span>
+                                </div>
+                            </> : <>
+                                <div className="mt-10 max-w-[425px] md:max-w-full overflow-x-auto">
+                                    <table className="table w-full table-zebra text-center">
+                                        <thead>
+                                            <tr className="">
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Index</th>
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Date</th>
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Temperature (C)</th>
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Blood Pressure (BP)</th>
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Heart Rate (BPM)</th>
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">View/Update</th>
+                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Delete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {
+                                                allRecord?.map((item, index) => <tr key={item?._id}>
+                                                    <th className="p-4 border-b border-blue-gray-50">{index + 1}</th>
+                                                    <td className=" border-b border-blue-gray-50">
+                                                        {item?.date}
+                                                    </td>
+                                                    <td className="p-4 border-b border-blue-gray-50">
+                                                        {item?.temp}
+                                                    </td>
+                                                    <td className="p-4 border-b border-blue-gray-50">
+                                                        {item?.bp}
+                                                    </td>
+                                                    <td className="p-4 border-b border-blue-gray-50">
+                                                        {item?.heartRate}
+                                                    </td>
+
+                                                    <th
+                                                        className="p-4 border-b border-blue-gray-50">
+                                                        <button
+                                                            onClick={() => handleUpdate(item)}
+                                                            className="bg-blue-800 text-white rounded-md px-4 py-2">
+                                                            View</button>
+                                                    </th>
+                                                    <th className="p-4 border-b border-blue-gray-50">
+                                                        <button className="rounded-md px-4 py-2"
+                                                            onClick={() => HandleDeleteRecord(item?._id)}><MdDelete className='text-2xl' /></button>
+                                                    </th>
+                                                </tr>
+                                                )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        }
+                    </div> : <></>
+                }
+            </div>
+            <dialog id="my_modal" className="modal">
+                <div className="modal-box">
+                    <form method="dialog">
+                        <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    </form>
+                    <HealthRecordForm refetch={refetch} />
+                </div>
+            </dialog>
+            <dialog id="my_modal2" className="modal">
+                <div className="modal-box">
+                    <form method="dialog">
+                        <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    </form>
+                    <UpdateRecord data={updatedData} refetch={refetch} />
+                </div>
+            </dialog>
+
+
         </div>
     )
 }

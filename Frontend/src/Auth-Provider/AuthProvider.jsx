@@ -30,9 +30,9 @@ const AuthProvider = ({ children }) => {
         setLoading(true);
         return signInWithPopup(auth, googleProvider);
     }
-    let updateUserProfile = (name) => {
-        return updateProfile(auth.currentUser, {
-            displayName: name
+    let updateUserProfile  = (name,image)=>{
+        return updateProfile(auth.currentUser ,{
+            displayName: name , photoURL: image
         });
     }
 
