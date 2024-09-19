@@ -4,12 +4,13 @@ import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndP
 
 import auth from "../Firebase/Firebase.config";
 import useAxios from "../Hooks/useAxios";
+import PropTypes from "prop-types";
 
 export const AuthContext = createContext(null);
 
 const AuthProvider = ({ children }) => {
     let [user, setUser] = useState(null);
-    let [loading, setLoading] = useState(false);
+    let [loading, setLoading] = useState(true);
     let googleProvider = new GoogleAuthProvider();
     let axiosRoot = useAxios();
 
@@ -43,6 +44,7 @@ const AuthProvider = ({ children }) => {
                 email: currentUser?.email
             }
             if (currentUser) {
+                setLoading(false);
                 axiosRoot.post('/jwt', userInfo,)
                     .then(() => {
                         console.log('JWT logged');
@@ -86,4 +88,7 @@ const AuthProvider = ({ children }) => {
     );
 
 };
+AuthProvider.propTypes = {
+    children: PropTypes.node,
+}
 export default AuthProvider;
