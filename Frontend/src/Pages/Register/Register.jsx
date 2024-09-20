@@ -12,41 +12,33 @@ import animation from '../../assets/Registration/SignUpAnimation.json'
 
 import { useForm } from "react-hook-form"
 import useAuth from "../../Hooks/useAuth";
-import useAxios from "../../Hooks/useAxios";
 
 const Register = () => {
 
     let [showPassword, setShowPassword] = useState(false);
-    let { createUser, googleSignIn, setLoading } = useAuth();
-    let axiosRoot = useAxios();
+    let { createUser, googleSignIn, setLoading, updateUserProfile } = useAuth();
     let navigate = useNavigate()
 
     const { register, handleSubmit, formState: { errors }, } = useForm();
     const onSubmit = (data) => {
         createUser(data?.email, data?.password)
             .then(() => {
-                let user = {
-                    name: data?.name,
-                    email: data?.email,
-                    password: data?.password
-                }
-                axiosRoot.post('/register', user)
-                    .then(res => {
-                        if (res.data.insertedId) {
-                            Swal.fire({
-                                position: "top",
-                                icon: "success",
-                                title: "User Created Successfully",
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            navigate('/')
-                        }
-
+                updateUserProfile(data?.name)
+                .then(()=>{
+                    setLoading(false);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Congratulations',
+                        text: `User Created successfully`,
                     })
-                    .catch(err => {
-                        console.log(err);
+                    navigate('/');
+                }).catch(err=>{
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: `${err.message}`,
                     })
+                })
             })
             .catch(error => {
                 Swal.fire({
@@ -82,7 +74,7 @@ const Register = () => {
 
 
     return (
-        <div className="flex flex-col md:flex-row gap-5 px-2 justify-center items-center mt-5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-5 px-2 justify-center items-center my-10 ">
             <div className="bg-gray-400 w-full md:w-5/12 text-center p-10 rounded-lg">
                 <h2 className="text-3xl font-bold mb-2">Register Now!</h2>
                 <form onSubmit={handleSubmit(onSubmit)}>

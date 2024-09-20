@@ -27,9 +27,9 @@ const Login = () => {
                 console.log(result.user);
                 e.target.reset();
                 Swal.fire({
-                    title: 'Success!',
+                    title: 'success!',
                     text: 'User Login Successfully',
-                    icon: 'Success',
+                    icon: 'success',
                     confirmButtonText: 'Cool'
                 })
                 navigate('/');
@@ -49,7 +49,7 @@ const Login = () => {
                 Swal.fire({
                     title: 'success!',
                     text: 'User Login Successfully',
-                    icon: 'Success',
+                    icon: 'success',
                     confirmButtonText: 'Cool'
                 })
                 setLoading(false);
@@ -66,9 +66,9 @@ const Login = () => {
 
 
     return (
-        <div className="flex flex-col md:flex-row-reverse justify-center items-center gap-5 px-4 mt-5 min-h-screen">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row-reverse gap-5 px-2 justify-center items-center my-10">
             <div className="bg-gray-400 w-full md:w-4/12 md:pr-10 text-center p-10 rounded-lg">
-                <h2 className="text-3xl font-bold">Login Now!</h2>
+                <h2 className="text-3xl font-bold mb-5">Login Now!</h2>
                 <form onSubmit={handleLogin}>
                     <div className="relative">
                         <p className="text-left text-lg font-semibold">User Email</p>
@@ -79,7 +79,7 @@ const Login = () => {
                             placeholder="Type your email"
                             required />
                     </div>
-                    <hr className="my-3" />
+                    <hr className="my-2" />
                     <div className="relative">
                         <p className="text-left text-lg font-semibold">Password</p>
                         <RiLockPasswordFill className="absolute bottom-4 left-2"></RiLockPasswordFill>
@@ -90,9 +90,8 @@ const Login = () => {
                         />
                         <span onClick={() => setShowPassword(!showPassword)} className="absolute right-3 bottom-4">{showPassword ? <FaEyeSlash></FaEyeSlash> : <FaEye></FaEye>}</span>
                     </div>
-                    <hr className="my-3" />
-
-                    <button className=" btn btn-outline w-full" type="submit">
+                    <div className="py-3"></div>
+                    <button className="bg-gradient-to-r from-violet-500 to-fuchsia-500 w-full py-2 text-white font-semibold text-lg rounded-xl " type="submit">
                         Login</button>
 
                 </form>

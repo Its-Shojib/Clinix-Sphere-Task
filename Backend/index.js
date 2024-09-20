@@ -105,7 +105,6 @@ async function run() {
 
         app.put('/health-records/:id', async (req, res) => {
             try {
-                console.log(req.params.id);
                 const currentDate = new Date();
                 const updatedRecord = {
                     ...req.body,
@@ -119,7 +118,6 @@ async function run() {
                     { _id: new ObjectId(req.params.id) },
                     { $set: updatedRecord }
                 );
-                console.log(result);
         
                 if (result.modifiedCount === 0) {
                     return res.status(404).json({ 

@@ -23,46 +23,29 @@ const AuthProvider = ({ children }) => {
         return signInWithEmailAndPassword(auth, email, password);
     }
     let Logout = () => {
-        setLoading(false);
+        setLoading(true);
         return signOut(auth);
     }
     let googleSignIn = () => {
         setLoading(true);
         return signInWithPopup(auth, googleProvider);
     }
-    let updateUserProfile  = (name,image)=>{
+    let updateUserProfile  = (name)=>{
         return updateProfile(auth.currentUser ,{
-            displayName: name , photoURL: image
+            displayName: name 
         });
     }
 
     useEffect(() => {
         let unSubscribe = onAuthStateChanged(auth, currentUser => {
             setUser(currentUser);
-            console.log('observing: ', currentUser?.displayName);
-            let userInfo = {
-                email: currentUser?.email
-            }
+            console.log('observing: ', currentUser);
+
             if (currentUser) {
                 setLoading(false);
-                axiosRoot.post('/jwt', userInfo,)
-                    .then(() => {
-                        console.log('JWT logged');
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    })
+            }else{
+                setLoading(false);
             }
-            else {
-                axiosRoot.post('/logout', userInfo)
-                    .then(() => {
-                        console.log("Jwt Authentication Hitted!")
-                    })
-                    .catch(err => {
-                        console.log(err);
-                    })
-            }
-
         })
         return () => {
             unSubscribe();

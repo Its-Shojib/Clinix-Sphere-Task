@@ -2,15 +2,20 @@ import Navbar from '../Components/Navbar';
 import HealthRecordForm from '../Components/HealthRecordForm';
 import { useQuery } from '@tanstack/react-query';
 import useAxios from '../Hooks/useAxios';
-import { MdDelete } from "react-icons/md";
+// import { MdDelete } from "react-icons/md";
 import Swal from 'sweetalert2';
 import { FaSquarePlus } from "react-icons/fa6";
 import UpdateRecord from '../Components/UpdateRecord';
 import { useState } from 'react';
+import DataTable from '../Components/DataTable';
 
 const DashBoard = () => {
     let axiosRoot = useAxios();
     let [updatedData, setUpdatedData] = useState({});
+    let [startDate, setStartDate] = useState('');
+    let [endDate, setEndDate] = useState('');
+    let [heartRateThreshold, setHeartRateThreshold] = useState('');
+    let [searchTerm, setSearchTerm] = useState('');
 
     const { data: allRecord = [], isPending, refetch } = useQuery({
         queryKey: ['allRecord'],
@@ -20,6 +25,25 @@ const DashBoard = () => {
         }
     });
 
+    const filteredRecords = allRecord.filter((record) => {
+        const recordDate = new Date(record.date);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        const meetsDateFilter = start && end ? recordDate >= start && recordDate <= end : true;
+
+        const meetsHeartRateFilter = heartRateThreshold
+            ? record.heartRate >= parseInt(heartRateThreshold)
+            : true;
+
+        const meetsSearchFilter = searchTerm
+            ? record.email.includes(searchTerm) ||
+            record.temp.toString().includes(searchTerm) ||
+            record.bp.includes(searchTerm) ||
+            record.heartRate.toString().includes(searchTerm)
+            : true;
+
+        return meetsDateFilter && meetsHeartRateFilter && meetsSearchFilter;
+    });
 
     const handleUpdate = (item) => {
         setUpdatedData(item);
@@ -46,97 +70,92 @@ const DashBoard = () => {
                     });
                     refetch();
                 }
-
-
             }
         });
-
     }
 
     return (
         <div className='max-w-screen-2xl mx-auto px-2'>
             <Navbar />
-            {/* dashboard content goes here */}
+            {/* dashboard content */}
 
             <div className='flex flex-col md:flex-row gap-5 justify-between items-center my-7 bg-stone-400 p-6 rounded-md'>
                 <div className='md:min-w-[800px]'>
                     <form action="">
                         <input
                             type="text"
-                            name=""
                             placeholder='Search here...'
-                            className='md:min-w-[500px] p-2 rounded-xl outline-none' />
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className='md:min-w-[500px] p-2 rounded-xl outline-none'
+                        />
                     </form>
                 </div>
                 <div>
-                    <button className="btn" onClick={() => document.getElementById('my_modal').showModal()}><FaSquarePlus className='text-xl' />New Health Record</button>
+                    <button className="btn" onClick={() => document.getElementById('my_modal').showModal()}>
+                        <FaSquarePlus className='text-xl' />New Health Record
+                    </button>
                 </div>
-                {/* You can open the modal using document.getElementById('ID').showModal() method */}
-
-
             </div>
-            {/* Filter those Data by date or filter by health metrics (e.g., heart rate above a certain threshold)*/}
+
+            <div className='flex flex-col md:flex-row gap-4 justify-center items-center my-6 bg-stone-100 rounded-md'>
+                <div className='flex justify-center items-center gap-5'>
+                    <div>
+                        <label className='block mb-2'>Start Date:</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className='p-2 rounded-md border border-gray-300'
+                        />
+                    </div>
+                    <div>
+                        <label className='block mb-2'>End Date:</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className='p-2 rounded-md border border-gray-300'
+                        />
+                    </div>
+                </div>
+
+                <div className='flex gap-4 justify-center items-center my-6'>
+                    <div>
+                        <label className='block mb-2'>Heart Rate Threshold (BPM):</label>
+                        <input
+                            type="number"
+                            value={heartRateThreshold}
+                            onChange={(e) => setHeartRateThreshold(e.target.value)}
+                            placeholder='Enter heart rate threshold'
+                            className='p-2 rounded-md border border-gray-300'
+                        />
+                    </div>
+                </div>
+            </div>
 
             <div>
                 {
-                    allRecord.length > 0 ? <div>
-                        {
-                            isPending ? <>
+                    filteredRecords?.length > 0 ? (
+                        <div>
+                            {isPending ? (
                                 <div className="text-center h-screen">
                                     <span className="loading loading-spinner loading-lg"></span>
                                 </div>
-                            </> : <>
+                            ) : (
                                 <div className="mt-10 max-w-[425px] md:max-w-full overflow-x-auto">
-                                    <table className="table w-full table-zebra text-center">
-                                        <thead>
-                                            <tr className="">
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Index</th>
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Date</th>
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Temperature (C)</th>
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Blood Pressure (BP)</th>
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Heart Rate (BPM)</th>
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">View/Update</th>
-                                                <th className="border-b border-blue-gray-100 bg-blue-gray-50">Delete</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {
-                                                allRecord?.map((item, index) => <tr key={item?._id}>
-                                                    <th className="p-4 border-b border-blue-gray-50">{index + 1}</th>
-                                                    <td className=" border-b border-blue-gray-50">
-                                                        {item?.date}
-                                                    </td>
-                                                    <td className="p-4 border-b border-blue-gray-50">
-                                                        {item?.temp}
-                                                    </td>
-                                                    <td className="p-4 border-b border-blue-gray-50">
-                                                        {item?.bp}
-                                                    </td>
-                                                    <td className="p-4 border-b border-blue-gray-50">
-                                                        {item?.heartRate}
-                                                    </td>
-
-                                                    <th
-                                                        className="p-4 border-b border-blue-gray-50">
-                                                        <button
-                                                            onClick={() => handleUpdate(item)}
-                                                            className="bg-blue-800 text-white rounded-md px-4 py-2">
-                                                            View</button>
-                                                    </th>
-                                                    <th className="p-4 border-b border-blue-gray-50">
-                                                        <button className="rounded-md px-4 py-2"
-                                                            onClick={() => HandleDeleteRecord(item?._id)}><MdDelete className='text-2xl' /></button>
-                                                    </th>
-                                                </tr>
-                                                )}
-                                        </tbody>
-                                    </table>
+                                    <DataTable
+                                        filteredRecords={filteredRecords}
+                                        handleUpdate={handleUpdate}
+                                        HandleDeleteRecord={HandleDeleteRecord} />
                                 </div>
-                            </>
-                        }
-                    </div> : <></>
+                            )}
+                        </div>
+                    ) : <p className='text-center text-gray-500'>No records found</p>
                 }
             </div>
+
+            {/* Modals */}
             <dialog id="my_modal" className="modal">
                 <div className="modal-box">
                     <form method="dialog">
@@ -153,9 +172,8 @@ const DashBoard = () => {
                     <UpdateRecord data={updatedData} refetch={refetch} />
                 </div>
             </dialog>
-
-
         </div>
-    )
+    );
 }
+
 export default DashBoard;
