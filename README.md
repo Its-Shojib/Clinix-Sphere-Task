@@ -1,6 +1,9 @@
-# 🩺 Health Records Dashboard
+# Health Records Dashboard
 
 Hey there! Welcome to the Health Records Dashboard, your new best friend for keeping track of your health journey. 🌟
+
+## Live Site
+Check out the live site: [Health Records Dashboard](https://health-care-tracking.netlify.app)
 
 ## What's This All About?
 
@@ -50,15 +53,12 @@ Ever wished you had a cool, easy way to log your health stuff? Well, you're in l
 ## Tech Stuff (for the Curious)
 
 We've got some cool tech under the hood:
-- React & Next.js (because we're fancy)
-- Tailwind CSS (making things pretty)
-- DaisyUi (for those sleek components)
-
-## Wanna Help?
-
-Got ideas? Found a bug? We're all ears! Feel free to:
-- 🐛 Open an issue
-- 🛠️ Submit a pull request
-- 🌟 Give us a star if you like what you see!
+- React 
+- Tailwind CSS 
+- DaisyUi
+- React Hot Toast
+- Sweet Alert2
+- RTK Query
+- React Hook Form
 
 Happy health tracking! 🎉

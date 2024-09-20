@@ -1,7 +1,7 @@
 import axios from "axios";
 
 let axiosRoot = axios.create({
-    baseURL: 'http://localhost:5000',
+    baseURL: 'https://clinix-sphere-bice.vercel.app',
     withCredentials: true,
     
 })

@@ -7,7 +7,7 @@ let cors = require('cors')
 
 app.use(cors({
     origin: [
-        'http://localhost:5173', '',
+        'http://localhost:5173', 'https://health-care-tracking.netlify.app',
     ],
     credentials: true
 }))
